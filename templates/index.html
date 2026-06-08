@@ -8,8 +8,7 @@
     <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-{{ error }}
-{{ message }}
+
     <div class="top-links">
         <a href="#" onclick="showRegister()">Register</a>
         <a href="#" onclick="showLogin()">Login</a>
@@ -23,15 +22,17 @@
             <form action="/signin" method="POST">
 
                 <label>Username</label>
-                <input type="text" placeholder="Enter username"required name="username">
+                <input type="text" placeholder="Enter username" name="username" required>
                 <label>Password</label>
-                <input type="password" placeholder="Enter password"required name="password">
+                <input type="password" placeholder="Enter password" name="password" required>
 
-                {% if error %}
-                <div class="error-msg">
-                    {{ error }}
-                </div>
-                {% endif %}
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for msg in messages %}
+                            <p>{{ msg }}</p>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
                 <button type="submit" name="submit">Login</button>
             </form>
