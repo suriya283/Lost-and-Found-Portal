@@ -14,20 +14,24 @@ def signin():
     if request.method=="POST":
         res=check_user()
         if res:
-            return render_template("home.html",result=f"{session.get('name')} You are successfully logged in")
+            flash(f"{session.get('name')} You are successfully logged in")
+            return redirect("/home")
         else:
-            flash("Username or password is incorrect")
+            flash("<span style='color:red;'>Username or password is incorrect </span>")
             return redirect("/")
     return render_template("index.html")
 @app.route("/signup",methods=["POST","GET"])
 def signup():
     if request.method=="POST":
         if register():
-            flash("Username is already exists!")
+            flash("<span style='color:red;'>Username is already exists! </span>")
             return redirect("/")
         else:
-            flash("Successfully registered!")
+            flash("<span style='color:green;'>Successfully registered! </span>")
             return redirect("/")
     return render_template("index.html")
+@app.route("/home",methods=["GET","POST"])
+def home():
+    return render_template("home.html")
 if __name__=="__main__":
     app.run(debug=True)

@@ -6,7 +6,15 @@
     <title>Dashboard</title>
 </head>
 <body>
-{{ result }}
+{% with messages=get_flashed_messages() %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div style="color: green">
+            {{ msg }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
     <a>Found</a>
     <a>Lost</a>
     <form action="/lostitem">

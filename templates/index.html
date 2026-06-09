@@ -25,15 +25,15 @@
                 <input type="text" placeholder="Enter username" name="username" required>
                 <label>Password</label>
                 <input type="password" placeholder="Enter password" name="password" required>
-
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
                         {% for msg in messages %}
-                            <p>{{ msg }}</p>
+                            <div class="flash">
+                            {{ msg|safe }}
+                            </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
-
                 <button type="submit" name="submit">Login</button>
             </form>
         </div>
