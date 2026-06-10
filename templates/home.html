@@ -3,53 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Lost and Found Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
 </head>
 <body>
-{% with messages=get_flashed_messages() %}
-    {% if messages %}
-        {% for msg in messages %}
-            <div style="color: green">
-            {{ msg }}
+    <header class="header">
+        <h1>Lost & Found Portal</h1>
+        <nav class="nav">
+            <a href="javascript:void(0)" class="nav-link" onclick="showDashboard()">Dashboard</a>
+            <a href="javascript:void(0)" class="nav-link" onclick="showLostForm()">Lost Items</a>
+            <a href="javascript:void(0)" class="nav-link" onclick="showFoundForm()">Found Items</a>
+        </nav>
+    </header>
+
+    {% with messages=get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert">
+                {% for msg in messages %}
+                    <p>{{ msg }}</p>
+                {% endfor %}
             </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-    <a>Found</a>
-    <a>Lost</a>
-    <form action="/lostitem">
-        <label for="item name">Item name</label>
-        <input id="item name" type="text" name="item name" required>
-        <label for="description"></label>
-        <input id="description" type="text" name="description">
-        <label for="lost location">Lost location</label>
-        <input id="lost location" type="text" name="lost location">
-        <label for="lost date">Lost date</label>
-        <input id="lost date" type="date" name="lost date">
-        <label for="image">image</label>
-        <input id="image" type="image" name="image">
-        <label for="reciever number">Mobile number</label>
-        <input id="reciever number" type="number" name="reciever number">
-        <button type="reset">Reset</button>
-        <button type="submit">Submit</button>
-    </form>
+        {% endif %}
+    {% endwith %}
 
-    <form action="/founditem">
-        <label for="found item">Item name</label>
-        <input id="found item" type="text" name="found item" required>
-        <label for="found description"></label>
-        <input id="found description" type="text" name="found description">
-        <label for="found location">Lost location</label>
-        <input id="found location" type="text" name="found location">
-        <label for="found date">Lost date</label>
-        <input id="found date" type="date" name="found date">
-        <label for="found image">image</label>
-        <input id="found image" type="image" name="found image">
-        <label for="giver number">Mobile number</label>
-        <input id="giver number" type="number" name="giver number">
-        <button type="reset">Reset</button>
-        <button type="submit">Submit</button>
-    </form>
+    <main class="container">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="dashboard-view">
+            <div class="dashboard-header">
+                <h2>Welcome to Lost & Found Portal</h2>
+                <p>Help others find their belongings or report items you've found</p>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="dashboard-card" onclick="showLostForm()">
+                    <div class="card-icon">📋</div>
+                    <h3>Report Lost Item</h3>
+                    <p>Report an item you've lost and describe it in detail to help us find it</p>
+                    <button class="btn">Report Lost Item</button>
+                </div>
+                
+                <div class="dashboard-card" onclick="showFoundForm()">
+                    <div class="card-icon">🔍</div>
+                    <h3>Report Found Item</h3>
+                    <p>Report an item you've found so we can help reunite it with its owner</p>
+                    <button class="btn">Report Found Item</button>
+                </div>
+            </div>
 
+            <!-- Lost Items Section -->
+            <div class="items-section">
+                <h2 class="section-title">Recently Lost Items</h2>
+                {% if lost_items %}
+                    <div class="items-container">
+                        {% for item in lost_items %}
+                            <div class="item-card">
+                                <div class="item-card-header">
+                                    <h3>{{ item['item_name'] }}</h3>
+                                    <span class="item-badge lost-badge">LOST</span>
+                                </div>
+                                <div class="item-card-content">
+                                    <p class="item-description"><strong>Description:</strong> {{ item['description'] if item['description'] else 'N/A' }}</p>
+                                    <p><strong>Location:</strong> {{ item['location'] if item['location'] else 'N/A' }}</p>
+                                    <p><strong>Date Lost:</strong> {{ item['date_lost'] if item['date_lost'] else 'N/A' }}</p>
+                                    <p><strong>Contact:</strong> {{ item['mobile_number'] if item['mobile_number'] else 'N/A' }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-items-message">
+                        <p>No lost items reported yet. Be the first to report!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Found Items Section -->
+            <div class="items-section">
+                <h2 class="section-title">Recently Found Items</h2>
+                {% if found_items %}
+                    <div class="items-container">
+                        {% for item in found_items %}
+                            <div class="item-card">
+                                <div class="item-card-header">
+                                    <h3>{{ item['item_name'] }}</h3>
+                                    <span class="item-badge found-badge">FOUND</span>
+                                </div>
+                                <div class="item-card-content">
+                                    <p class="item-description"><strong>Description:</strong> {{ item['description'] if item['description'] else 'N/A' }}</p>
+                                    <p><strong>Location Found:</strong> {{ item['location'] if item['location'] else 'N/A' }}</p>
+                                    <p><strong>Date Found:</strong> {{ item['date_found'] if item['date_found'] else 'N/A' }}</p>
+                                    <p><strong>Contact:</strong> {{ item['mobile_number'] if item['mobile_number'] else 'N/A' }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-items-message">
+                        <p>No found items reported yet. Help someone find their belongings!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Forms Section -->
+        <div id="forms-section" style="display: none;">
+            <div class="forms-grid">
+            <section class="form-section" id="lost">
+                <h2>Report Lost Item</h2>
+                <form action="/lostitem" class="form">
+                    <div class="form-group">
+                        <label for="item name">Item Name</label>
+                        <input id="item name" type="text" name="item name" placeholder="Enter item name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input id="description" type="text" name="description" placeholder="Describe the item">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost location">Location</label>
+                        <input id="lost location" type="text" name="lost location" placeholder="Where was it lost?">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost date">Date Lost</label>
+                        <input id="lost date" type="date" name="lost date">
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Photo</label>
+                        <input id="image" type="file" name="image">
+                    </div>
+                    <div class="form-group">
+                        <label for="reciever number">Mobile Number</label>
+                        <input id="reciever number" type="tel" name="reciever number" placeholder="Your contact number">
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="form-section" id="found">
+                <h2>Report Found Item</h2>
+                <form action="/founditem" class="form">
+                    <div class="form-group">
+                        <label for="found item">Item Name</label>
+                        <input id="found item" type="text" name="found item" placeholder="Enter item name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="found description">Description</label>
+                        <input id="found description" type="text" name="found description" placeholder="Describe the item">
+                    </div>
+                    <div class="form-group">
+                        <label for="found location">Location Found</label>
+                        <input id="found location" type="text" name="found location" placeholder="Where was it found?">
+                    </div>
+                    <div class="form-group">
+                        <label for="found date">Date Found</label>
+                        <input id="found date" type="date" name="found date">
+                    </div>
+                    <div class="form-group">
+                        <label for="found image">Photo</label>
+                        <input id="found image" type="file" name="found image">
+                    </div>
+                    <div class="form-group">
+                        <label for="giver number">Mobile Number</label>
+                        <input id="giver number" type="tel" name="giver number" placeholder="Your contact number">
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function showDashboard() {
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('forms-section').style.display = 'none';
+        }
+
+        function showLostForm() {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('forms-section').style.display = 'block';
+            document.getElementById('lost').scrollIntoView({ behavior: 'smooth' });
+            
+            // Hide found form and show only lost form
+            document.getElementById('found').style.display = 'none';
+            document.getElementById('lost').style.display = 'block';
+            
+            // Update grid layout for single form
+            document.querySelector('.forms-grid').style.gridTemplateColumns = '1fr';
+        }
+
+        function showFoundForm() {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('forms-section').style.display = 'block';
+            document.getElementById('found').scrollIntoView({ behavior: 'smooth' });
+            
+            // Hide lost form and show only found form
+            document.getElementById('lost').style.display = 'none';
+            document.getElementById('found').style.display = 'block';
+            
+            // Update grid layout for single form
+            document.querySelector('.forms-grid').style.gridTemplateColumns = '1fr';
+        }
+    </script>
 </body>
 </html>

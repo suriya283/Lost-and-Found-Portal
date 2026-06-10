@@ -35,3 +35,55 @@ def store_user(username,name,password):
     cursor.close()
     connection.close()
     return False
+
+def store_lost_item(item_name, description, location, date_lost, user_id, mobile_number):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        query = "insert into lost_items (item_name, description, location, date_lost, user_id, mobile_number) values (%s,%s,%s,%s,%s,%s)"
+        values = (item_name, description, location, date_lost, user_id, mobile_number)
+        cursor.execute(query, values)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return True
+    except:
+        return False
+
+def store_found_item(item_name, description, location, date_found, user_id, mobile_number):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        query = "insert into found_items (item_name, description, location, date_found, user_id, mobile_number) values (%s,%s,%s,%s,%s,%s)"
+        values = (item_name, description, location, date_found, user_id, mobile_number)
+        cursor.execute(query, values)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return True
+    except:
+        return False
+
+def get_lost_items():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("select * from lost_items order by date_lost desc")
+        items = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return items
+    except:
+        return []
+
+def get_found_items():
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("select * from found_items order by date_found desc")
+        items = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return items
+    except:
+        return []
