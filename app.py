@@ -1,3 +1,4 @@
+from unittest import result
 
 from utility import *
 from db import *
@@ -5,6 +6,9 @@ from flask import Flask, render_template, request, flash, redirect,session
 
 app=Flask(__name__)
 app.secret_key="12345"
+
+UPLOAD_FOLDER="static/uploads"
+app.config["UPLOAD_FOLDER"]=UPLOAD_FOLDER
 @app.route('/')
 def login():
     return render_template("index.html")
@@ -32,6 +36,19 @@ def signup():
     return render_template("index.html")
 @app.route("/home",methods=["GET","POST"])
 def home():
+    return render_template("home.html")
+@app.route("/report",methods=["GET","POST"])
+def report_item():
+    if request.method=="POST":
+        form_type=request.form["form_type"]
+        if form_type == "lost":
+            result=item_form()
+            print(result)
+            if result:
+                flash("Successfully updated the Lost Item!")
+                return redirect('/home')
+        if form_type == "found":
+            pass
     return render_template("home.html")
 if __name__=="__main__":
     app.run(debug=True)

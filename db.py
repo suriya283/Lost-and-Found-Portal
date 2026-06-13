@@ -35,3 +35,14 @@ def store_user(username,name,password):
     cursor.close()
     connection.close()
     return False
+def store_items(user_id,name,description,location,date,img_location,number):
+    status="lost"
+    connection=get_db_connection()
+    cursor=connection.cursor()
+    query="insert into items (user_id, item_name, item_description, location, date, image_location, mobile_number, status) values(%s,%s,%s,%s,%s,%s,%s,%s)"
+    values=user_id,name,description,location,date,img_location,number,status
+    cursor.execute(query,values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return True

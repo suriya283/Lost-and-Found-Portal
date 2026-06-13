@@ -1,7 +1,9 @@
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import request,session
-
+from werkzeug.utils import secure_filename
+import uuid
+import os
 from db import *
 def check_user():
     username=request.form["username"]
@@ -25,3 +27,17 @@ def register():
     password=request.form["password"]
     hashed_password = generate_password_hash(password)
     return store_user(username,name,hashed_password)
+
+def item_form():
+    item_name=request.form["item_name"]
+    description=request.form["description"]
+    lost_location=request.form["location"]
+    lost_date=request.form["date"]
+    receiver_number=request.form["mobile_number"]
+    user_id = session.get("id")
+    image = request.files["image"]
+    filename=f"{uuid.uuid4()}_{secure_filename(image.filename)}"
+    image.save(os.path.join("static/uploads",filename))
+    image_location=f"uploads/{filename}"
+    result=store_items(user_id,item_name,description,lost_location,lost_date,image_location,receiver_number)
+    return result
