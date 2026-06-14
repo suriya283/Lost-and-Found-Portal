@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
 </head>
 <body>
-
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <div class="flash-messages">
@@ -17,11 +16,44 @@
             </div>
         {% endif %}
     {% endwith %}
+    <div class="dashboard-header">
+        <h1>Lost & Found Portal</h1>
+        <p>Find your lost belongings or help others recover theirs.</p>
+    </div>
+    <div class="stats-container">
+        <div class="stat-card">
+            <h2>{{ lost_count }}</h2>
+            <p>Lost Items</p>
+        </div>
 
+        <div class="stat-card">
+            <h2>{{ found_count }}</h2>
+            <p>Found Items</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ datas|length }}</h2>
+            <p>Total Reports</p>
+        </div>
+    </div>
+    <form action="/home" method="GET" class="search-form">
+        <input
+            type="text"
+            name="search"
+            placeholder="Search item"
+            value="{{ request.args.get('search','') }}"
+        >
+        <select name="filter">
+            <option value="">All Items</option>
+            <option value="lost">Lost Items</option>
+            <option value="found">Found Items</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
     <!-- Navigation links in the top-right corner -->
     <div class="top-right-nav">
-        <a href="javascript:void(0)" id="link-lost" onclick="showform('lost')">Lost Item</a>
-        <a href="javascript:void(0)" id="link-found" onclick="showform('found')">Found Item</a>
+        <a href="javascript:void(0)" id="link-lost" onclick="showform('lost')">Report Lost Item</a>
+        <a href="javascript:void(0)" id="link-found" onclick="showform('found')">Report Found Item</a>
     </div>
 
     <!-- Classic Card Wrapper (Hidden by default) -->
@@ -110,54 +142,56 @@
     </div>
     {% if datas %}
     <div class="items-grid-container">
-
-        <!-- Example Item Card (Repeat this block with a backend loop) -->
+        {% for item in datas %}
         <div class="item-display-card">
-            <!-- Photo Section -->
-            <div class="item-card-image">
-                <!-- Fallback text if image missing, otherwise your dynamic dynamic backend source img src -->
-                <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="Item Photo" onerror="this.style.display='none'">
-            </div>
 
-            <!-- Content Details Section -->
             <div class="item-card-details">
                 <div class="item-header-row">
-                    <h3 class="item-display-name">iPhone 13 Pro</h3>
+                    <img src="{{ url_for('static', filename=item.image_location) }}"
+                         class="item-thumbnail"
+                         alt="{{ item.item_name }}">
+                    <div class="item-title-section">
+                        <h3 class="item-display-name">
+                            {{ item.item_name }}
+                        </h3>
 
-                    <!-- Dynamic Badge: Use class 'badge-lost' or 'badge-found' based on backend status -->
-                    <span class="status-badge badge-lost">Lost</span>
+                        <span class="status-badge
+                            {% if item.status == 'lost' %}
+                                badge-lost
+                            {% else %}
+                                badge-found
+                            {% endif %}
+                        ">{{ item.status|title }}
+                        </span>
+                    </div>
+
                 </div>
 
-                <p class="item-display-desc">Graphite color, clear silicon case, cracked screen protector on bottom left corner.</p>
+                <p class="item-display-desc">
+                    {{ item.item_description }}
+                </p>
 
                 <div class="item-meta-info">
-                    <div><strong>Location:</strong> Main Cafeteria</div>
-                    <div><strong>Date:</strong> 2026-06-12</div>
-                    <div><strong>Contact:</strong> 9876543210</div>
-                </div>
+                    <div>
+                        <strong>Location:</strong>
+                        {{ item.location }}
+                    </div>
+                    <div>
+                        <strong>Date:</strong>
+                        {{ item.date }}
+                    </div>
+                    <div>
+                        <strong>Contact:</strong>
+                        {{ item.mobile_number }}
+                    </div>
             </div>
+            <button class="claim-btn">Claim Item</button>
         </div>
-
-        <!-- Example 2: Found Item Card -->
-        <div class="item-display-card">
-            <div class="item-card-image">
-                <img src="/path-to-image.jpg" alt="Item Photo">
-            </div>
-            <div class="item-card-details">
-                <div class="item-header-row">
-                    <h3 class="item-display-name">Leather Wallet</h3>
-                    <span class="status-badge badge-found">Found</span>
-                </div>
-                <p class="item-display-desc">Black leather bifold wallet containing transit cards. Found near the parking lot entrance.</p>
-                <div class="item-meta-info">
-                    <div><strong>Location:</strong> Parking Lot A</div>
-                    <div><strong>Date:</strong> 2026-06-10</div>
-                    <div><strong>Contact:</strong> 9123456789</div>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
     {% endif %}
+    </div>
+
 
 <script>
     function showform(type){
@@ -177,8 +211,6 @@
             document.getElementById("link-found").classList.add("active-link");
         }
     }
-
-    // New function to completely hide the card and clear active links
     function closeForm() {
         document.getElementById("form-card").style.display = "none";
 

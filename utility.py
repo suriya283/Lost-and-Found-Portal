@@ -1,3 +1,4 @@
+from unittest import result
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import request,session
@@ -28,7 +29,7 @@ def register():
     hashed_password = generate_password_hash(password)
     return store_user(username,name,hashed_password)
 
-def item_form():
+def item_form(form_type):
     item_name=request.form["item_name"]
     description=request.form["description"]
     lost_location=request.form["location"]
@@ -39,5 +40,9 @@ def item_form():
     filename=f"{uuid.uuid4()}_{secure_filename(image.filename)}"
     image.save(os.path.join("static/uploads",filename))
     image_location=f"uploads/{filename}"
-    result=store_items(user_id,item_name,description,lost_location,lost_date,image_location,receiver_number)
-    return result
+    if form_type == "lost":
+        result=store_items(user_id,item_name,description,lost_location,lost_date,image_location,receiver_number,form_type)
+        return result
+    elif form_type == "found":
+        result=store_items(user_id,item_name,description,lost_location,lost_date,image_location,receiver_number,form_type)
+        return result
