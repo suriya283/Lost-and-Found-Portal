@@ -1,5 +1,7 @@
 from unittest import result
 
+from _testcapi import error
+
 from utility import *
 from db import *
 from flask import Flask, render_template, request, flash, redirect,session
@@ -18,20 +20,20 @@ def signin():
     if request.method=="POST":
         res=check_user()
         if res:
-            flash(f"{session.get('name')} You are successfully logged in")
+            flash(f"{session.get('name')} You are successfully logged in","success")
             return redirect("/home")
         else:
-            flash("<span style='color:red;'>Username or password is incorrect </span>")
+            flash("Username or password is incorrect","error")
             return redirect("/")
     return render_template("index.html")
 @app.route("/signup",methods=["POST","GET"])
 def signup():
     if request.method=="POST":
         if register():
-            flash("<span style='color:red;'>Username is already exists! </span>")
+            flash("Username is already exists!","error")
             return redirect("/")
         else:
-            flash("<span style='color:green;'>Successfully registered! </span>")
+            flash("Successfully registered!","success")
             return redirect("/")
     return render_template("index.html")
 @app.route("/home",methods=["GET","POST"])
@@ -52,12 +54,12 @@ def report_item():
         if form_type == "lost":
             result=item_form(form_type)
             if result:
-                flash("Successfully report the Lost Item!")
+                flash("Successfully report the Lost Item!","success")
                 return redirect('/home')
         if form_type == "found":
             result=item_form(form_type)
             if result:
-                flash("Successfully report the Found Item!")
+                flash("Successfully report the Found Item!","success")
                 return redirect('/home')
     return render_template("home.html")
 if __name__=="__main__":

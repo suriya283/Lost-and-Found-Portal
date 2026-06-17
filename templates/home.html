@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
 </head>
 <body>
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">
-                {% for msg in messages %}
-                    <div class="flash-message">{{ msg }}</div>
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
                 {% endfor %}
             </div>
         {% endif %}
@@ -184,18 +184,62 @@
                         <strong>Contact:</strong>
                         {{ item.mobile_number }}
                     </div>
+                </div>
             </div>
-            <button class="claim-btn">Claim Item</button>
+            <button
+                type="button"
+                class="claim-btn"
+                onclick='openClaimPopup({{ item.id|tojson }}, {{ item.item_name|tojson }})'
+            >
+                Claim Item
+            </button>
         </div>
         {% endfor %}
     </div>
     {% endif %}
-    </div>
 
+<div class="claim-modal" id="claimform" style="display: none;">
+    <div class="claim-modal-content">
+        <h2>Claim Item</h2>
+        <p id="claimItemName"></p>
+
+        <form action="/claim" method="post">
+            <input type="hidden" name="item_id" id="claimItemId">
+            <div class="input-group">
+                <label for="claim_description">Why do you believe this item is yours?</label>
+                <textarea
+                    id="claim_description"
+                    name="proof"
+                    placeholder="Mention identifying details, purchase date, unique marks, contents, or any proof of ownership...."
+                    required
+                ></textarea>
+            </div>
+            <div class="claim-actions">
+                <button type="button" class="btn-classic-close" onclick="closeClaimPopup()">Cancel</button>
+                <button type="submit" class="claim-btn">Submit Claim</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
+    function setHomeContentVisible(isVisible) {
+        const displayValue = isVisible ? "" : "none";
+        const searchForm = document.querySelector(".search-form");
+        const itemsGrid = document.querySelector(".items-grid-container");
+
+        if (searchForm) {
+            searchForm.style.display = displayValue;
+        }
+
+        if (itemsGrid) {
+            itemsGrid.style.display = displayValue;
+        }
+    }
+
     function showform(type){
         document.getElementById("form-card").style.display = "block";
+        setHomeContentVisible(false);
 
         document.getElementById("lostform").classList.remove("active");
         document.getElementById("foundform").classList.remove("active");
@@ -213,12 +257,23 @@
     }
     function closeForm() {
         document.getElementById("form-card").style.display = "none";
+        setHomeContentVisible(true);
 
         document.getElementById("lostform").classList.remove("active");
         document.getElementById("foundform").classList.remove("active");
 
         document.getElementById("link-lost").classList.remove("active-link");
         document.getElementById("link-found").classList.remove("active-link");
+    }
+    function openClaimPopup(itemId, itemName){
+        document.getElementById("claimItemId").value = itemId;
+        document.getElementById("claimItemName").textContent = itemName;
+        document.getElementById("claimform").style.display = "flex";
+    }
+
+    function closeClaimPopup(){
+        document.getElementById("claimform").style.display = "none";
+        document.getElementById("claim_description").value = "";
     }
 </script>
 </body>
