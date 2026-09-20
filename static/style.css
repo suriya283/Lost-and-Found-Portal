@@ -11,22 +11,33 @@ body {
     box-sizing: border-box;
 }
 
-.top-links {
-    position: absolute;
-    top: 20px;
-    right: 30px;
+.links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+    color: #64748b;
+    font-size: 14px;
 }
 
-.top-links a {
+.links p {
+    margin: 0;
+}
+
+.links a {
     text-decoration: none;
-    margin-left: 15px;
-    color: #475569;
-    font-weight: bold;
+    color: #2563eb;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 999px;
+    transition: 0.2s ease;
 }
 
-.top-links a:hover {
-    text-decoration: underline;
-    color: #3b82f6;
+.links a:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .container {

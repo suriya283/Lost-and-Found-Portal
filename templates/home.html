@@ -54,6 +54,8 @@
     <div class="top-right-nav">
         <a href="javascript:void(0)" id="link-lost" onclick="showform('lost')">Report Lost Item</a>
         <a href="javascript:void(0)" id="link-found" onclick="showform('found')">Report Found Item</a>
+        <a href="#" id="notification">🔔</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
     </div>
 
     <!-- Classic Card Wrapper (Hidden by default) -->
@@ -70,8 +72,12 @@
                     <input id="item_name" type="text" name="item_name" placeholder="e.g., Keys, Smartphone" required>
                 </div>
                 <div class="input-group">
-                    <label for="description">Description</label>
-                    <input id="description" type="text" name="description" placeholder="Color, brand, identifying marks">
+                    <label for="lost_description">Description</label>
+                    <textarea id="lost_description" name="description" placeholder="Color, brand, and other information"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="lost_verification_description">Description(Only visible to administrator to verify not public)</label>
+                    <textarea id="lost_verification_description" name="verfication_description" placeholder="Enter the secret information about the item to verify by administration" required></textarea>
                 </div>
                 <div class="input-group">
                     <label for="lost_location">Lost location</label>
@@ -98,7 +104,6 @@
             </form>
         </div>
 
-        <!-- Found Form Content -->
         <div id="foundform" class="form-content">
             <h2 class="form-title">Report Found Item</h2>
             <p class="form-subtitle">Help return a discovered item back to its rightful owner.</p>
@@ -112,7 +117,11 @@
                 </div>
                 <div class="input-group">
                     <label for="found_description">Description</label>
-                    <input id="found_description" type="text" name="description" placeholder="Item appearance details">
+                    <textarea id="found_description" name="description" placeholder="Item appearance details"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="found_verification_description">Description(Only visible to administrator to verify not public)</label>
+                    <textarea id="found_verification_description" name="verification_description" placeholder="Unique details of the item" required></textarea>
                 </div>
                 <div class="input-group">
                     <label for="found_location">Found location</label>
@@ -147,9 +156,11 @@
 
             <div class="item-card-details">
                 <div class="item-header-row">
-                    <img src="{{ url_for('static', filename=item.image_location) }}"
-                         class="item-thumbnail"
-                         alt="{{ item.item_name }}">
+                    {% if item.image_location %}
+                        <img src="{{ url_for('static', filename=item.image_location) }}"
+                             class="item-thumbnail"
+                             alt="{{ item.item_name }}">
+                    {% endif %}
                     <div class="item-title-section">
                         <h3 class="item-display-name">
                             {{ item.item_name }}
@@ -180,33 +191,34 @@
                         <strong>Date:</strong>
                         {{ item.date }}
                     </div>
-                    <div>
-                        <strong>Contact:</strong>
-                        {{ item.mobile_number }}
-                    </div>
                 </div>
             </div>
-            <button
-                type="button"
-                class="claim-btn"
-                onclick='openClaimPopup({{ item.id|tojson }}, {{ item.item_name|tojson }})'
-            >
-                Claim Item
-            </button>
+            {% if session["id"] != item.user_id %}
+                <button
+                    type="button"
+                    class="claim-btn"
+                    onclick='openPopup({{ item.id|tojson }}, {{ item.item_name|tojson }},{{item.status|tojson}})'>
+                        {%if item.status=="found"%}
+                            Claim Item
+                        {%else%}
+                            I Found This Item
+                        {%endif%}
+                </button>
+            {%endif%}
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-<div class="claim-modal" id="claimform" style="display: none;">
-    <div class="claim-modal-content">
+<div class="popup" id="claimform" style="display: none;">
+    <div class="popup-content">
         <h2>Claim Item</h2>
         <p id="claimItemName"></p>
 
-        <form action="/claim" method="post">
+        <form action="/claim" method="POST">
             <input type="hidden" name="item_id" id="claimItemId">
             <div class="input-group">
-                <label for="claim_description">Why do you believe this item is yours?</label>
+                <label for="claim_description">Why do you believe this item is yours? to verify by administration</label>
                 <textarea
                     id="claim_description"
                     name="proof"
@@ -221,7 +233,30 @@
         </form>
     </div>
 </div>
+<div class="popup" id="found-form" style="display: none;">
+    <div class="popup-content">
+        <p id="foundItemName"></p>
+        <form action="/founder" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="item_id" id="foundItemId">
+            <div class="input-group">
+                <label for="founder-number">Mobile Number</label>
+                <input id="founder-number" name="number" type="number" placeholder="Enter Your Number" required>
+                <label for="item-location">Location</label>
+                <input id="item-location" name="location" type="text" placeholder="Enter the Location You found The item" required>
+                <label for="item-description">Description</label>
+                <textarea id="item-description" name="description" placeholder="Enter uniqueness of the item to verify by administration" required></textarea>
+                <label for="item-image">Image</label>
+                <input id="item-image" name="image" type="file">
+            </div>
+            <div class="claim-actions">
+                <button type="button" class="btn-classic-close" onclick="closeFoundPopup()">Cancel</button>
+                <button type="submit" class="claim-btn">Submit</button>
+            </div>
+        </form>
 
+    </div>
+
+</div>
 <script>
     function setHomeContentVisible(isVisible) {
         const displayValue = isVisible ? "" : "none";
@@ -265,15 +300,30 @@
         document.getElementById("link-lost").classList.remove("active-link");
         document.getElementById("link-found").classList.remove("active-link");
     }
-    function openClaimPopup(itemId, itemName){
-        document.getElementById("claimItemId").value = itemId;
-        document.getElementById("claimItemName").textContent = itemName;
-        document.getElementById("claimform").style.display = "flex";
+    function openPopup(itemId, itemName,itemStatus){
+        if (itemStatus=="found"){
+            document.getElementById("claimItemId").value = itemId;
+            document.getElementById("claimItemName").textContent = itemName;
+            document.getElementById("claimform").style.display = "flex";
+        }
+        else if (itemStatus=="lost"){
+            document.getElementById("foundItemId").value = itemId;
+            document.getElementById("foundItemName").textContent=itemName;
+            document.getElementById("found-form").style.display="flex";
+        }
+
     }
 
     function closeClaimPopup(){
         document.getElementById("claimform").style.display = "none";
         document.getElementById("claim_description").value = "";
+    }
+    function closeFoundPopup(){
+        document.getElementById("found-form").style.display = "none";
+        document.getElementById("founder-number").value = "";
+        document.getElementById("item-location").value = "";
+        document.getElementById("item-description").value = "";
+        document.getElementById("item-image").value = "";
     }
 </script>
 </body>

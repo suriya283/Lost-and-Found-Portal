@@ -10,6 +10,15 @@ def get_db_connection():
         database="lost_and_found"
     )
 
+def check_admin(username):
+    connection = get_db_connection()
+    cursor =connection.cursor(dictionary=True)
+    cursor.execute("select * from admin where username=%s",(username,))
+    datas=cursor.fetchone()
+    cursor.close()
+    connection.close()
+    return datas
+
 def check_db(username):
     connection=get_db_connection()
     cursor=connection.cursor(dictionary=True)
@@ -17,10 +26,8 @@ def check_db(username):
     datas=cursor.fetchone()
     cursor.close()
     connection.close()
-    if datas:
-        return datas
-    else:
-        return
+    return datas
+
 def store_user(username,name,password):
     connection=get_db_connection()
     cursor=connection.cursor()
@@ -37,11 +44,11 @@ def store_user(username,name,password):
     cursor.close()
     connection.close()
     return False
-def store_items(user_id,name,description,location,date,img_location,number,status):
+def store_items(user_id,name,description,verification_description,location,date,number,status,img_location=None):
     connection=get_db_connection()
     cursor=connection.cursor()
-    query="insert into items (user_id, item_name, item_description, location, date, image_location, mobile_number, status) values(%s,%s,%s,%s,%s,%s,%s,%s)"
-    values=user_id,name,description,location,date,img_location,number,status
+    query="insert into items (user_id, item_name, item_description, verfication_description,location, date, image_location, mobile_number, status) values(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    values=user_id,name,description,verification_description,location,date,img_location,number,status
     cursor.execute(query,values)
     connection.commit()
     cursor.close()
@@ -81,3 +88,38 @@ def search_items(keyword=None,status=None):
     cursor.close()
     connection.close()
     return datas
+def store_proof(id,proof,user_id):
+    connection=get_db_connection()
+    cursor=connection.cursor()
+    query="insert into claims (item_id,claimant_id,proof_description,status) values (%s,%s,%s,%s)"
+    values=id,user_id,proof,"pending"
+    cursor.execute(query,values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return True
+def store_founder(user_id,item_id,number,location,description):
+    connection=get_db_connection()
+    cursor=connection.cursor()
+    query="insert into founders (item_id, founder_id, mobile_number, location, proof_description, status) values (%s,%s,%s,%s,%s,%s)"
+    values=item_id,user_id,number,location,description,"reported"
+    cursor.execute(query,values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return True
+def admin_display():
+    connection=get_db_connection()
+    cursor=connection.cursor(dictionary=True)
+    cursor.execute("SELECT COUNT(*) AS total_users FROM users")
+    users = cursor.fetchone()
+    total_users=users['total_users']
+    cursor.execute("SELECT * FROM items")
+    items=cursor.fetchall()
+    cursor.execute("select * from items i join founders f on i.id=f.item_id")
+    found_datas=cursor.fetchall()
+    cursor.execute("select * from items i join claims c on i.id=c.item_id")
+    claims_datas=cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return total_users,items

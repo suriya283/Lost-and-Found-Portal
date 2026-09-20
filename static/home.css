@@ -440,7 +440,7 @@ input[type="file"] {
     background: #1557b0;
 }
 
-.claim-modal {
+.popup {
     position: fixed;
     inset: 0;
     z-index: 1000;
@@ -451,7 +451,7 @@ input[type="file"] {
     box-sizing: border-box;
 }
 
-.claim-modal-content {
+.popup-content {
     width: min(100%, 460px);
     background: #ffffff;
     border-radius: 12px;
@@ -460,14 +460,14 @@ input[type="file"] {
     box-sizing: border-box;
 }
 
-.claim-modal-content h2 {
+.popup-content h2 {
     margin: 0 0 8px;
     color: #202124;
     font-size: 24px;
     font-weight: 600;
 }
 
-.claim-modal-content p {
+.popup-content p {
     margin: 0 0 20px;
     color: #5f6368;
     font-size: 14px;
