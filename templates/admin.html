@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='admin.css')}}">
+</head>
+<body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="stats-container">
+        <div class="stat-card">
+            <h2>{{ users }}</h2>
+            <p>Users</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ lost_count }}</h2>
+            <p>Lost Items</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ found_count }}</h2>
+            <p>Found Items</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ items|length }}</h2>
+            <p>Total Reports</p>
+        </div>
+    </div>
+
+
+
+</body>
+</html>

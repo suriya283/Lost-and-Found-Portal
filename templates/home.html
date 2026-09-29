@@ -2,44 +2,329 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
 </head>
 <body>
-    <a>Found</a>
-    <a>Lost</a>
-    <form action="/lostitem">
-        <label for="item name">Item name</label>
-        <input id="item name" type="text" name="item name" required>
-        <label for="description"></label>
-        <input id="description" type="text" name="description">
-        <label for="lost location">Lost location</label>
-        <input id="lost location" type="text" name="lost location">
-        <label for="lost date">Lost date</label>
-        <input id="lost date" type="date" name="lost date">
-        <label for="image">image</label>
-        <input id="image" type="image" name="image">
-        <label for="reciever number">Mobile number</label>
-        <input id="reciever number" type="number" name="reciever number">
-        <button type="reset">Reset</button>
-        <button type="submit">Submit</button>
-    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, msg in messages %}
+                    <div class="flash {{ category }}">{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <div class="dashboard-header">
+        <h1>Lost & Found Portal</h1>
+        <p>Find your lost belongings or help others recover theirs.</p>
+    </div>
+    <div class="stats-container">
+        <div class="stat-card">
+            <h2>{{ lost_count }}</h2>
+            <p>Lost Items</p>
+        </div>
 
-    <form action="/founditem">
-        <label for="found item">Item name</label>
-        <input id="found item" type="text" name="found item" required>
-        <label for="found description"></label>
-        <input id="found description" type="text" name="found description">
-        <label for="found location">Lost location</label>
-        <input id="found location" type="text" name="found location">
-        <label for="found date">Lost date</label>
-        <input id="found date" type="date" name="found date">
-        <label for="found image">image</label>
-        <input id="found image" type="image" name="found image">
-        <label for="giver number">Mobile number</label>
-        <input id="giver number" type="number" name="giver number">
-        <button type="reset">Reset</button>
-        <button type="submit">Submit</button>
-    </form>
+        <div class="stat-card">
+            <h2>{{ found_count }}</h2>
+            <p>Found Items</p>
+        </div>
 
+        <div class="stat-card">
+            <h2>{{ datas|length }}</h2>
+            <p>Total Reports</p>
+        </div>
+    </div>
+    <form action="/home" method="GET" class="search-form">
+        <input
+            type="text"
+            name="search"
+            placeholder="Search item"
+            value="{{ request.args.get('search','') }}"
+        >
+        <select name="filter">
+            <option value="">All Items</option>
+            <option value="lost">Lost Items</option>
+            <option value="found">Found Items</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
+    <!-- Navigation links in the top-right corner -->
+    <div class="top-right-nav">
+        <a href="javascript:void(0)" id="link-lost" onclick="showform('lost')">Report Lost Item</a>
+        <a href="javascript:void(0)" id="link-found" onclick="showform('found')">Report Found Item</a>
+        <a href="#" id="notification">🔔</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <!-- Classic Card Wrapper (Hidden by default) -->
+    <div id="form-card" class="classic-card" style="display: none;">
+
+        <!-- Lost Form Content -->
+        <div id="lostform" class="form-content">
+            <h2 class="form-title">Report Lost Item</h2>
+            <p class="form-subtitle">Please provide detailed information to help locate your item.</p>
+
+            <form action="/report" method="POST" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label for="item_name">Item name</label>
+                    <input id="item_name" type="text" name="item_name" placeholder="e.g., Keys, Smartphone" required>
+                </div>
+                <div class="input-group">
+                    <label for="lost_description">Description</label>
+                    <textarea id="lost_description" name="description" placeholder="Color, brand, and other information"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="lost_verification_description">Description(Only visible to administrator to verify not public)</label>
+                    <textarea id="lost_verification_description" name="verfication_description" placeholder="Enter the secret information about the item to verify by administration" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="lost_location">Lost location</label>
+                    <input id="lost_location" type="text" name="location" placeholder="Where did you last see it?" required>
+                </div>
+                <div class="input-group">
+                    <label for="lost_date">Lost date</label>
+                    <input id="lost_date" type="date" name="date" required>
+                </div>
+                <div class="input-group">
+                    <label for="image">Attachment image</label>
+                    <input id="image" type="file" name="image">
+                </div>
+                <div class="input-group">
+                    <label for="receiver_number">Mobile number</label>
+                    <input id="receiver_number" type="number" name="mobile_number" placeholder="Contact number" required>
+                </div>
+                <input type="hidden" name="form_type" value="lost">
+                <div class="form-buttons">
+                    <button type="button" class="btn-classic-close" onclick="closeForm()">Close</button>
+                    <button type="reset" class="btn-classic-secondary">Reset</button>
+                    <button type="submit" class="btn-classic-gradient btn-lost-grad">Submit Report</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="foundform" class="form-content">
+            <h2 class="form-title">Report Found Item</h2>
+            <p class="form-subtitle">Help return a discovered item back to its rightful owner.</p>
+
+            <form action="/report" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="form_type" value="found">
+
+                <div class="input-group">
+                    <label for="found_item">Item name</label>
+                    <input id="found_item" type="text" name="item_name" placeholder="e.g., Backpack, Wallet" required>
+                </div>
+                <div class="input-group">
+                    <label for="found_description">Description</label>
+                    <textarea id="found_description" name="description" placeholder="Item appearance details"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="found_verification_description">Description(Only visible to administrator to verify not public)</label>
+                    <textarea id="found_verification_description" name="verification_description" placeholder="Unique details of the item" required></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="found_location">Found location</label>
+                    <input id="found_location" type="text" name="location" placeholder="Where did you discover it?" required>
+                </div>
+                <div class="input-group">
+                    <label for="found_date">Found date</label>
+                    <input id="found_date" type="date" name="date" required>
+                </div>
+                <div class="input-group">
+                    <label for="found_image">Attachment image</label>
+                    <input id="found_image" type="file" name="image">
+                </div>
+                <div class="input-group">
+                    <label for="giver_number">Mobile number</label>
+                    <input id="giver_number" type="number" name="mobile_number" placeholder="Contact number" required>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" class="btn-classic-close" onclick="closeForm()">Close</button>
+                    <button type="reset" class="btn-classic-secondary">Reset</button>
+                    <button type="submit" class="btn-classic-gradient btn-found-grad">Submit Report</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+    {% if datas %}
+    <div class="items-grid-container">
+        {% for item in datas %}
+        <div class="item-display-card">
+
+            <div class="item-card-details">
+                <div class="item-header-row">
+                    {% if item.image_location %}
+                        <img src="{{ url_for('static', filename=item.image_location) }}"
+                             class="item-thumbnail"
+                             alt="{{ item.item_name }}">
+                    {% endif %}
+                    <div class="item-title-section">
+                        <h3 class="item-display-name">
+                            {{ item.item_name }}
+                        </h3>
+
+                        <span class="status-badge
+                            {% if item.status == 'lost' %}
+                                badge-lost
+                            {% else %}
+                                badge-found
+                            {% endif %}
+                        ">{{ item.status|title }}
+                        </span>
+                    </div>
+
+                </div>
+
+                <p class="item-display-desc">
+                    {{ item.item_description }}
+                </p>
+
+                <div class="item-meta-info">
+                    <div>
+                        <strong>Location:</strong>
+                        {{ item.location }}
+                    </div>
+                    <div>
+                        <strong>Date:</strong>
+                        {{ item.date }}
+                    </div>
+                </div>
+            </div>
+            {% if session["id"] != item.user_id %}
+                <button
+                    type="button"
+                    class="claim-btn"
+                    onclick='openPopup({{ item.id|tojson }}, {{ item.item_name|tojson }},{{item.status|tojson}})'>
+                        {%if item.status=="found"%}
+                            Claim Item
+                        {%else%}
+                            I Found This Item
+                        {%endif%}
+                </button>
+            {%endif%}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+<div class="popup" id="claimform" style="display: none;">
+    <div class="popup-content">
+        <h2>Claim Item</h2>
+        <p id="claimItemName"></p>
+
+        <form action="/claim" method="POST">
+            <input type="hidden" name="item_id" id="claimItemId">
+            <div class="input-group">
+                <label for="claim_description">Why do you believe this item is yours? to verify by administration</label>
+                <textarea
+                    id="claim_description"
+                    name="proof"
+                    placeholder="Mention identifying details, purchase date, unique marks, contents, or any proof of ownership...."
+                    required
+                ></textarea>
+            </div>
+            <div class="claim-actions">
+                <button type="button" class="btn-classic-close" onclick="closeClaimPopup()">Cancel</button>
+                <button type="submit" class="claim-btn">Submit Claim</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="popup" id="found-form" style="display: none;">
+    <div class="popup-content">
+        <p id="foundItemName"></p>
+        <form action="/founder" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="item_id" id="foundItemId">
+            <div class="input-group">
+                <label for="founder-number">Mobile Number</label>
+                <input id="founder-number" name="number" type="number" placeholder="Enter Your Number" required>
+                <label for="item-location">Location</label>
+                <input id="item-location" name="location" type="text" placeholder="Enter the Location You found The item" required>
+                <label for="item-description">Description</label>
+                <textarea id="item-description" name="description" placeholder="Enter uniqueness of the item to verify by administration" required></textarea>
+                <label for="item-image">Image</label>
+                <input id="item-image" name="image" type="file">
+            </div>
+            <div class="claim-actions">
+                <button type="button" class="btn-classic-close" onclick="closeFoundPopup()">Cancel</button>
+                <button type="submit" class="claim-btn">Submit</button>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+<script>
+    function setHomeContentVisible(isVisible) {
+        const displayValue = isVisible ? "" : "none";
+        const searchForm = document.querySelector(".search-form");
+        const itemsGrid = document.querySelector(".items-grid-container");
+
+        if (searchForm) {
+            searchForm.style.display = displayValue;
+        }
+
+        if (itemsGrid) {
+            itemsGrid.style.display = displayValue;
+        }
+    }
+
+    function showform(type){
+        document.getElementById("form-card").style.display = "block";
+        setHomeContentVisible(false);
+
+        document.getElementById("lostform").classList.remove("active");
+        document.getElementById("foundform").classList.remove("active");
+
+        document.getElementById("link-lost").classList.remove("active-link");
+        document.getElementById("link-found").classList.remove("active-link");
+
+        if (type === "lost") {
+            document.getElementById("lostform").classList.add("active");
+            document.getElementById("link-lost").classList.add("active-link");
+        } else {
+            document.getElementById("foundform").classList.add("active");
+            document.getElementById("link-found").classList.add("active-link");
+        }
+    }
+    function closeForm() {
+        document.getElementById("form-card").style.display = "none";
+        setHomeContentVisible(true);
+
+        document.getElementById("lostform").classList.remove("active");
+        document.getElementById("foundform").classList.remove("active");
+
+        document.getElementById("link-lost").classList.remove("active-link");
+        document.getElementById("link-found").classList.remove("active-link");
+    }
+    function openPopup(itemId, itemName,itemStatus){
+        if (itemStatus=="found"){
+            document.getElementById("claimItemId").value = itemId;
+            document.getElementById("claimItemName").textContent = itemName;
+            document.getElementById("claimform").style.display = "flex";
+        }
+        else if (itemStatus=="lost"){
+            document.getElementById("foundItemId").value = itemId;
+            document.getElementById("foundItemName").textContent=itemName;
+            document.getElementById("found-form").style.display="flex";
+        }
+
+    }
+
+    function closeClaimPopup(){
+        document.getElementById("claimform").style.display = "none";
+        document.getElementById("claim_description").value = "";
+    }
+    function closeFoundPopup(){
+        document.getElementById("found-form").style.display = "none";
+        document.getElementById("founder-number").value = "";
+        document.getElementById("item-location").value = "";
+        document.getElementById("item-description").value = "";
+        document.getElementById("item-image").value = "";
+    }
+</script>
 </body>
 </html>

@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login & Register</title>
     <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
-    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-{{ error }}
-{{ message }}
-    <div class="top-links">
-        <a href="#" onclick="showRegister()">Register</a>
-        <a href="#" onclick="showLogin()">Login</a>
+    <div class="logo-section">
+    <h1>🔍 Lost & Found Portal</h1>
+    <p>Reconnect People with Their Belongings</p>
     </div>
-
     <div class="container">
         <div id="loginForm">
 
@@ -23,18 +19,24 @@
             <form action="/signin" method="POST">
 
                 <label>Username</label>
-                <input type="text" placeholder="Enter username"required name="username">
+                <input type="text" placeholder="Enter username" name="username" required>
                 <label>Password</label>
-                <input type="password" placeholder="Enter password"required name="password">
-
-                {% if error %}
-                <div class="error-msg">
-                    {{ error }}
-                </div>
-                {% endif %}
-
+                <input type="password" placeholder="Enter password" name="password" required>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, msg in messages %}
+                            <div class="flash {{ category }}">
+                            {{ msg|safe }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
                 <button type="submit" name="submit">Login</button>
             </form>
+            <div class="links">
+                <p>Don't have an account?</p>
+                <a href="#" onclick="showRegister()">Sign up</a>
+            </div>
         </div>
 
         <div id="registerForm" style="display: none;">
@@ -52,7 +54,10 @@
                 <button type="submit">Register</button>
 
             </form>
-
+            <div class="links">
+                <p>Already have an account?</p>
+                <a href="#" onclick="showLogin()">Login</a>
+            </div>
         </div>
 
     </div>
